@@ -3,7 +3,7 @@ from django.db import models
 
 User = get_user_model()
 
-class Ingredients(models.Model):
+class Ingredient(models.Model):
     name = models.CharField(max_length=100)
     units = models.CharField(max_length=50)
 

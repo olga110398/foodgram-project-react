@@ -11,4 +11,3 @@ pytest-pythonpath==0.7.3
 python-dotenv==0.10.1
 PyYAML==6.0
 gunicorn==20.1.0
-get_reader==1.0.0
