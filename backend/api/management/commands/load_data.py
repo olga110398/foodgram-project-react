@@ -17,7 +17,7 @@ class Command(BaseCommand):
                 for row in reader:
                     obj, created = Ingredient.objects.get_or_create(
                         name=row['name'],
-                        units=row['measurement_unit']
+                        measurement_unit=row['measurement_unit']
                     )
                 print('Загрузка ингредиентов прошла успешно.')
         except FileNotFoundError:
