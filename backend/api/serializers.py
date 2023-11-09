@@ -194,8 +194,8 @@ class SubscribeListSerializer(serializers.ModelSerializer):
         user = self.context['request'].user
         if user.is_anonymous:
             return False
-        return Subscribe.objects.filter(
-                follower=user, following=obj).exists()
+        return Subscribe.objects.filter(follower=user,
+                                        following=obj).exists()
 
 
 class SubcribeSerializer(serializers.ModelSerializer):
