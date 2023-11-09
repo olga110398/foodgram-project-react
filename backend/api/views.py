@@ -149,8 +149,7 @@ class APIShoppingCart(APIView):
         ingredients = IngredientAmount.objects.filter(
             recipe__in=recipe).values(
                 'ingredient__name',
-                'ingredient__measurement_unit'
-            ).annotate(amount=Sum('amount'))
+                'ingredient__measurement_unit').annotate(amount=Sum('amount'))
         shopping_list = ['Список покупок:']
         for ingredient in ingredients:
             name = ingredient["ingredient__name"]

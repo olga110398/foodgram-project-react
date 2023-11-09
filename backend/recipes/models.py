@@ -34,8 +34,7 @@ class Tag(models.Model):
         unique=True,
         validators=[
             RegexValidator(r'^[-a-zA-Z0-9_]+$'),
-        ],
-        )
+        ],)
 
     class Meta:
         ordering = ('name',)
