@@ -1,22 +1,27 @@
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
-from rest_framework.permissions import (IsAuthenticated,
+from rest_framework.permissions import (IsAuthenticated, AllowAny,
                                         IsAuthenticatedOrReadOnly)
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
 from .models import CustomUser
-from .serializers import ProfileSerializer
+from .serializers import ProfileSerializer, UserCreateSerializer
 
 
 class UserViewSet(ModelViewSet):
     """Вьюсеты для модели User."""
     queryset = CustomUser.objects.all()
     serializer_class = ProfileSerializer
-    permission_classes = (IsAuthenticatedOrReadOnly,)
+    permission_classes = (AllowAny,)
     filter_backends = (SearchFilter,)
     search_fields = ('username',)
+
+    def get_serializer_class(self):
+        if self.action in ('list', 'retrieve'):
+            return ProfileSerializer
+        return UserCreateSerializer
 
     @action(
         methods=['get', 'patch', ],

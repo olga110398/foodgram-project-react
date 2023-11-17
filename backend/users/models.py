@@ -38,11 +38,11 @@ class CustomUser(AbstractUser):
         'Пароль',
         max_length=150,
         blank=False,
+        null = False,
         validators=[
             RegexValidator(r'^[\w.@+-]+\Z'),
         ],
     )
-    is_subscribed = models.BooleanField(default=False)
 
     class Meta:
         ordering = ('username',)

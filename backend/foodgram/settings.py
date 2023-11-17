@@ -99,8 +99,12 @@ DJOSER = {
     'SERIALIZERS': {
         'user': 'users.serializers.ProfileSerializer',
         'current_user': 'users.serializers.ProfileSerializer',
-        'user_delete': 'users.serializers.ProfileSerializer',
+        'user_create': 'users.serializers.UserCreateSerialize',
     },
+    'PERMISSIONS': {
+        'user_list': ['rest_framework.permissions.AllowAny'],
+        'user': ['rest_framework.permissions.IsAuthenticated']
+    }
 }
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators

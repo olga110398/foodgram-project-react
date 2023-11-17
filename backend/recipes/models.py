@@ -150,9 +150,10 @@ class Favorite(models.Model):
         verbose_name_plural = 'Избранные рецепты'
 
     def __str__(self):
-        list_recipes = [item['name'] for item in self.recipe.values('name')]
-        list_recipes_str = ', '.join(list_recipes)
-        return f'{self.user} добавил {list_recipes_str} в избранные.'
+        return 'str'
+        # list_recipes = [item['name'] for item in self.recipe.values('name')]
+        # list_recipes_str = ', '.join(list_recipes)
+        # return f'{self.user} добавил {list_recipes_str} в избранные.'
 
 
 class ShoppingСart(models.Model):
@@ -173,6 +174,8 @@ class ShoppingСart(models.Model):
         verbose_name_plural = 'Рецепты в списке покупок'
 
     def __str__(self):
-        list_recipes = [item['name'] for item in self.recipe.values('name')]
-        list_recipes_str = ', '.join(list_recipes)
-        return f'{self.user} добавил {list_recipes_str} в список покупок.'
+        print(self.recipe)
+        return f'{self.recipe}'
+        # list_recipes = [item['name'] for item in self.recipe.values('name')]
+        # list_recipes_str = ', '.join(list_recipes)
+        # return f'{self.user} добавил {list_recipes_str} в список покупок.'

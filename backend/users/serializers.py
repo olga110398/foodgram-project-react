@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from djoser.serializers import UserCreateSerializer
 
 from recipes.models import Subscribe
 from users.models import CustomUser
@@ -18,3 +19,10 @@ class ProfileSerializer(serializers.ModelSerializer):
             return False
         return Subscribe.objects.filter(follower=user,
                                         following=obj).exists()
+
+class UserCreateSerialize(UserCreateSerializer):
+
+    class Meta:
+        model = CustomUser
+        fields = ('email', 'username', 'first_name',
+                  'last_name', 'password')
