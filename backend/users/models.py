@@ -38,7 +38,7 @@ class CustomUser(AbstractUser):
         'Пароль',
         max_length=150,
         blank=False,
-        null = False,
+        null=False,
         validators=[
             RegexValidator(r'^[\w.@+-]+\Z'),
         ],

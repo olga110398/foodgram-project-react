@@ -1,10 +1,10 @@
 from django.contrib.auth.password_validation import validate_password
 from django.core import exceptions as django_exceptions
+from djoser.serializers import SetPasswordSerializer, UserCreateSerializer
 from rest_framework import serializers
-from djoser.serializers import UserCreateSerializer, SetPasswordSerializer
 
 from recipes.models import Subscribe
-from users.models import CustomUser
+from .models import CustomUser
 
 
 class ProfileSerializer(serializers.ModelSerializer):
@@ -22,12 +22,14 @@ class ProfileSerializer(serializers.ModelSerializer):
         return Subscribe.objects.filter(follower=user,
                                         following=obj).exists()
 
+
 class CreateUserSerializer(UserCreateSerializer):
 
     class Meta:
         model = CustomUser
         fields = ('email', 'id', 'username', 'first_name',
                   'last_name', 'password')
+
 
 class ChangePasswordSerializer(SetPasswordSerializer):
     new_password = serializers.CharField()
@@ -45,7 +47,7 @@ class ChangePasswordSerializer(SetPasswordSerializer):
                 {'new_password': list(error.messages)}
             )
         return super().validate(data)
-    
+
     def update(self, instance, validated_data):
         if not instance.check_password(validated_data['current_password']):
             raise serializers.ValidationError(

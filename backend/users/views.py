@@ -1,14 +1,13 @@
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
-from rest_framework.permissions import (IsAuthenticated, AllowAny,
-                                        IsAuthenticatedOrReadOnly)
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
-from rest_framework.views import APIView
 
 from .models import CustomUser
-from .serializers import ProfileSerializer, CreateUserSerializer, ChangePasswordSerializer
+from .serializers import (ChangePasswordSerializer, CreateUserSerializer,
+                          ProfileSerializer)
 from api.pagination import CustomPaginator
 
 
@@ -62,8 +61,8 @@ class UserViewSet(ModelViewSet):
             return Response({'status': 'Пароль успешно изменен!'},
                             status=status.HTTP_204_NO_CONTENT)
         if user.is_anonymous:
-            return Response({'detail': 'Учетные данные не были предоставлены.'},
+            return Response({'detail':
+                             'Учетные данные не были предоставлены.'},
                             status=status.HTTP_401_UNAUTHORIZED)
         return Response(serializer.errors,
-                            status=status.HTTP_400_BAD_REQUEST)
-
+                        status=status.HTTP_400_BAD_REQUEST)
