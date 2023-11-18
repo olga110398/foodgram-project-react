@@ -20,6 +20,7 @@ from .serializers import (FavoriteSerializer, IngredientSerializer,
                           RecipeListSerializer, RecipeSerializer,
                           ShoppingCartSerializer, SubcribeSerializer,
                           SubscribeListSerializer, TagSerializer)
+from .pagination import CustomPaginator
 
 
 class IngredientViewSet(ReadOnlyModelViewSet):
@@ -44,6 +45,7 @@ class RecipeViewSet(ModelViewSet):
     permission_classes = (IsAuthorOrReadOnlyPermission,)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
+    pagination_class = CustomPaginator
 
     def get_serializer_class(self):
         if self.action in ('list', 'retrieve'):
@@ -69,6 +71,7 @@ class SubscribeViewSet(ModelViewSet):
     permission_classes = (IsAuthenticated,)
     filter_backends = (filters.SearchFilter,)
     search_fields = ['following__username', ]
+    pagination_class = CustomPaginator
 
     def subscribe(self, request, **kwargs):
         """Создает подписку/отписку на/от автора."""

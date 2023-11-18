@@ -99,7 +99,8 @@ DJOSER = {
     'SERIALIZERS': {
         'user': 'users.serializers.ProfileSerializer',
         'current_user': 'users.serializers.ProfileSerializer',
-        'user_create': 'users.serializers.UserCreateSerialize',
+        'user_create': 'users.serializers.CreateUserSerializer',
+        'set_password': 'djoser.serializers.SetPasswordSerializer',
     },
     'PERMISSIONS': {
         'user_list': ['rest_framework.permissions.AllowAny'],

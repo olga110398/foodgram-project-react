@@ -31,11 +31,11 @@ class Hex2NameColor(serializers.Field):
 
 
 class TagSerializer(serializers.ModelSerializer):
-    color_code = Hex2NameColor()
+    color = Hex2NameColor()
 
     class Meta:
-        fields = ('id', 'name', 'color_code', 'slug')
-        read_only_fields = ('name', 'color_code', 'slug')
+        fields = ('id', 'name', 'color', 'slug')
+        read_only_fields = ('name', 'color', 'slug')
         model = Tag
 
 
@@ -108,7 +108,7 @@ class RecipeSerializer(serializers.ModelSerializer):
 
     class Meta:
         fields = ('ingredients', 'tags', 'name',
-                  'text', 'cooking_time')
+                  'text', 'cooking_time', 'image')
         model = Recipe
 
     def validate(self, data):
