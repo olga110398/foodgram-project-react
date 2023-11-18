@@ -1,7 +1,6 @@
 from django.contrib.auth.password_validation import validate_password
 from django.core import exceptions as django_exceptions
-from django.contrib.auth.hashers import check_password
-from djoser.serializers import PasswordSerializer, UserCreateSerializer
+from djoser.serializers import UserCreateSerializer
 from rest_framework import serializers
 
 from recipes.models import Subscribe
