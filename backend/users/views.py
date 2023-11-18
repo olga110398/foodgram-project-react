@@ -49,13 +49,13 @@ class UserViewSet(ModelViewSet):
 
     @action(
         methods=['post', ],
-        detail=True,
+        detail=False,
         url_path='set_password',
         permission_classes=[IsAuthenticated],
     )
     def set_password(self, request):
         user = request.user
-        serializer = ChangePasswordSerializer(data=request.data)
+        serializer = ChangePasswordSerializer(user, data=request.data)
         if serializer.is_valid(raise_exception=True):
             serializer.save()
             return Response({'status': 'Пароль успешно изменен!'},
