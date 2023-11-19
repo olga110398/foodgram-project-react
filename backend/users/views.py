@@ -29,6 +29,7 @@ class UserViewSet(ModelViewSet):
         methods=['get', ],
         detail=False,
         url_path='me',
+        pagination_class=None,
         permission_classes=[IsAuthenticated]
     )
     def my_profile(self, request):

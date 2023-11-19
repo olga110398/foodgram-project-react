@@ -2,12 +2,14 @@ import base64
 
 import webcolors
 from django.core.files.base import ContentFile
-from rest_framework import serializers
+from rest_framework import serializers, status
 from rest_framework.validators import UniqueTogetherValidator
+from rest_framework.response import Response
 
 from recipes.models import (Favorite, Ingredient, IngredientAmount, Recipe,
                             ShoppingСart, Subscribe, Tag)
 from users.models import CustomUser
+from users.serializers import ProfileSerializer
 
 
 class IngredientSerializer(serializers.ModelSerializer):
@@ -52,6 +54,7 @@ class IngredientAmountSerializer(serializers.ModelSerializer):
 
 class RecipeListSerializer(serializers.ModelSerializer):
 
+    author = ProfileSerializer(read_only=True)
     ingredients = IngredientAmountSerializer(many=True,
                                              source='ingredient_amount')
     tags = TagSerializer(many=True, read_only=True)
@@ -104,7 +107,7 @@ class RecipeSerializer(serializers.ModelSerializer):
     ingredients = AddIngredientSerializer(many=True)
     tags = serializers.PrimaryKeyRelatedField(queryset=Tag.objects.all(),
                                               many=True)
-    image = Base64ImageField(required=False, allow_null=True)
+    image = Base64ImageField()
 
     class Meta:
         fields = ('ingredients', 'tags', 'name',
@@ -137,6 +140,16 @@ class RecipeSerializer(serializers.ModelSerializer):
             context={'request': request})
         return serializer.data
 
+    def tags_and_ingredients_set(self, recipe, tags, ingredients):
+        recipe.tags.set(tags)
+        for ingredient in ingredients:
+            IngredientAmount.objects.bulk_create([
+                IngredientAmount(
+                    recipe=recipe,
+                    ingredient=ingredient.get('id'),
+                    amount=ingredient.get('amount'),)
+            ])
+
     def create(self, validated_data):
         author = self.context.get('request').user
         tags = validated_data.pop('tags')
@@ -155,13 +168,15 @@ class RecipeSerializer(serializers.ModelSerializer):
         instance.author = validated_data.get('author', instance.author)
         instance.name = validated_data.get('name', instance.name)
         instance.image = validated_data.get('image', instance.image)
-        instance.text = validated_data.get('text',
-                                           instance.description)
-        instance.ingredients = validated_data.get('ingredients',
-                                                  instance.ingredients)
-        instance.tags = validated_data.get('tags', instance.tags)
+        instance.text = validated_data.get('text', instance.text)
         instance.cooking_time = validated_data.get('cooking_time',
                                                    instance.cooking_time)
+        ingredients = validated_data.pop('ingredients')
+        tags = validated_data.pop('tags')
+        IngredientAmount.objects.filter(
+            recipe=instance,
+            ingredient__in=instance.ingredients.all()).delete()
+        self.tags_and_ingredients_set(instance, tags, ingredients)
         instance.save()
         return instance
 
@@ -174,7 +189,7 @@ class RecipeMiniFieldSerializer(serializers.ModelSerializer):
 
 class SubscribeListSerializer(serializers.ModelSerializer):
     recipes = serializers.SerializerMethodField()
-    recipes_count = serializers.ReadOnlyField(source='recipes.count')
+    recipes_count = serializers.SerializerMethodField()
     is_subscribed = serializers.SerializerMethodField()
 
     class Meta:
@@ -183,12 +198,19 @@ class SubscribeListSerializer(serializers.ModelSerializer):
                   'is_subscribed', 'recipes', 'recipes_count')
 
     def get_recipes(self, obj):
+        request = self.context.get('request')
+        limit = request.GET.get('recipes_limit')
         recipes = Recipe.objects.filter(author=obj)
-
+        if limit:
+            recipes = recipes[:int(limit)]
         return RecipeMiniFieldSerializer(
             recipes,
             many=True,
             context=self.context).data
+
+    def get_recipes_count(self, obj):
+        recipes = Recipe.objects.filter(author=obj)
+        return recipes.count()
 
     def get_is_subscribed(self, obj):
         user = self.context['request'].user
@@ -199,38 +221,35 @@ class SubscribeListSerializer(serializers.ModelSerializer):
 
 
 class SubcribeSerializer(serializers.ModelSerializer):
-    follower = serializers.StringRelatedField(
-        read_only=True,
-        default=serializers.CurrentUserDefault(),
-    )
-    following = serializers.SlugRelatedField(
-        slug_field='username',
-        queryset=CustomUser.objects.all(),
-    )
-
     class Meta:
-        fields = ('follower', 'following')
         model = Subscribe
+        fields = '__all__'
         validators = [
             UniqueTogetherValidator(
                 queryset=Subscribe.objects.all(),
                 fields=('follower', 'following'),
-                message='Подписаться, можно только один раз'
+                message='Вы уже подписаны на этого пользователя'
             )
         ]
 
-    def validate_following(self, value):
-        """Проверка, что подписаться на себя нельзя"""
-        if self.context['request'].user == value:
+    def validate(self, data):
+        request = self.context.get('request')
+        if request.user == data['following']:
             raise serializers.ValidationError(
-                'Нельзя подписаться на самого себя!'
+                'Нельзя подписываться на самого себя!'
             )
-        return value
+        if request.user.is_anonymous:
+            return Response(
+                {'errors':
+                 'Подписаться можно только авторизованным пользователям'},
+                status=status.HTTP_401_UNAUTHORIZED)
+        return data
 
     def to_representation(self, instance):
-
-        return SubscribeListSerializer(instance.following,
-                                       context=self.context).data
+        request = self.context.get('request')
+        return SubscribeListSerializer(
+            instance.following, context={'request': request}
+        ).data
 
 
 class FavoriteSerializer(serializers.ModelSerializer):

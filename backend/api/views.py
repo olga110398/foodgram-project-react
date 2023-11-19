@@ -2,7 +2,7 @@ from django.db.models import Sum
 from django.http import FileResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, status
+from rest_framework import status
 from rest_framework.generics import ListAPIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -12,7 +12,6 @@ from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 from recipes.models import (Favorite, Ingredient, IngredientAmount, Recipe,
                             ShoppingСart, Subscribe, Tag)
 from users.models import CustomUser
-from users.serializers import ProfileSerializer
 
 from .filters import IngredientSearchFilter, RecipeFilter
 from .permissions import IsAuthorOrReadOnlyPermission
@@ -28,7 +27,8 @@ class IngredientViewSet(ReadOnlyModelViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     permission_classes = (AllowAny,)
-    filter_backends = [IngredientSearchFilter]
+    pagination_class = None
+    filterset_class = IngredientSearchFilter
 
 
 class TagViewSet(ReadOnlyModelViewSet):
@@ -36,12 +36,12 @@ class TagViewSet(ReadOnlyModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
     permission_classes = (AllowAny,)
+    pagination_class = None
 
 
 class RecipeViewSet(ModelViewSet):
     """Вьюсеты для модели Recipe."""
     queryset = Recipe.objects.all()
-    serializer_class = RecipeListSerializer
     permission_classes = (IsAuthorOrReadOnlyPermission,)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
@@ -54,9 +54,10 @@ class RecipeViewSet(ModelViewSet):
 
 
 class SubscribeListView(ListAPIView):
-    """APIView для отображения списка подписок"""
+    """Получение списка всех подписок на пользователей."""
     serializer_class = SubscribeListSerializer
     permission_classes = (IsAuthenticated,)
+    pagination_class = CustomPaginator
 
     def get_queryset(self):
         subscribe = Subscribe.objects.filter(
@@ -64,31 +65,37 @@ class SubscribeListView(ListAPIView):
         return CustomUser.objects.filter(id__in=subscribe)
 
 
-class SubscribeViewSet(ModelViewSet):
-    """Вьюсеты для модели Subcribe."""
-    queryset = CustomUser.objects.all()
-    serializer_class = SubcribeSerializer
+class SubscribeViewSet(APIView):
+    """Создает подписку/отписку на/от автора."""
     permission_classes = (IsAuthenticated,)
-    filter_backends = (filters.SearchFilter,)
-    search_fields = ['following__username', ]
-    pagination_class = CustomPaginator
 
-    def subscribe(self, request, **kwargs):
-        """Создает подписку/отписку на/от автора."""
+    def post(self, request, **kwargs):
+        following_id = self.kwargs.get('id')
+        following = get_object_or_404(CustomUser, id=following_id)
+        serializer = SubcribeSerializer(
+            data={'follower': request.user.id, 'following': following.id},
+            context={'request': request}
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def delete(self, request, **kwargs):
         follower = request.user
         following_id = self.kwargs.get('id')
         following = get_object_or_404(CustomUser, id=following_id)
-        if request.method == 'POST':
-            serializer = ProfileSerializer(following,
-                                           context={'request': request})
-            Subscribe.objects.create(follower=follower, following=following)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        if request.method == 'DELETE':
-            user_follow = get_object_or_404(Subscribe,
-                                            follower=follower,
-                                            following=following)
-            user_follow.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
+        if not Subscribe.objects.filter(follower=follower,
+                                        following=following).exists():
+            return Response(
+                {'errors': 'Вы не подписаны на этого пользователя'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        user_follow = get_object_or_404(Subscribe,
+                                        follower=follower,
+                                        following=following)
+        user_follow.delete()
+        return Response({'status': 'Успешная отписка'},
+                        status=status.HTTP_204_NO_CONTENT)
 
 
 class APIFavorite(APIView):
@@ -96,8 +103,14 @@ class APIFavorite(APIView):
     permission_classes = (IsAuthenticated,)
 
     def post(self, request, **kwargs):
-        recipe = get_object_or_404(Recipe, id=kwargs['id'])
+        try:
+            recipe = Recipe.objects.get(id=kwargs['id'])
+        except Recipe.DoesNotExist:
+            recipe = None
         serializer = FavoriteSerializer(recipe, context={'request': request})
+        if not recipe:
+            return Response({'error': 'Рецепта не существует'},
+                            status=status.HTTP_400_BAD_REQUEST)
         if Favorite.objects.filter(user=request.user,
                                    recipe=recipe).exists():
             return Response({'error': 'Рецепт уже добавлен в избранное'},
@@ -123,9 +136,15 @@ class APIShoppingCart(APIView):
     permission_classes = (IsAuthenticated,)
 
     def post(self, request, **kwargs):
-        recipe = get_object_or_404(Recipe, id=kwargs['id'])
+        try:
+            recipe = Recipe.objects.get(id=kwargs['id'])
+        except Recipe.DoesNotExist:
+            recipe = None
         serializer = ShoppingCartSerializer(recipe,
                                             context={'request': request})
+        if not recipe:
+            return Response({'error': 'Рецепта не существует'},
+                            status=status.HTTP_400_BAD_REQUEST)
         if ShoppingСart.objects.filter(user=request.user,
                                        recipe=recipe).exists():
             return Response({'error': 'Рецепт уже добавлен в корзину'},

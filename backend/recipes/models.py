@@ -1,5 +1,5 @@
 from colorfield.fields import ColorField
-from django.core.validators import RegexValidator
+from django.core.validators import RegexValidator, MinValueValidator
 from django.db import models
 
 from users.models import CustomUser
@@ -57,7 +57,7 @@ class Recipe(models.Model):
         verbose_name='Название рецепта')
     image = models.ImageField(
         upload_to='recipes/images/',
-        blank=True,
+        blank=False,
         verbose_name='Картинка'
     )
     text = models.TextField(
@@ -76,7 +76,8 @@ class Recipe(models.Model):
         verbose_name='Теги'
     )
     cooking_time = models.IntegerField(
-        verbose_name='Время приготовления'
+        verbose_name='Время приготовления',
+        validators=[MinValueValidator(1)]
     )
 
     class Meta:
@@ -127,6 +128,12 @@ class Subscribe(models.Model):
     class Meta:
         verbose_name = 'Подписка'
         verbose_name_plural = 'Подписки'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['follower', 'following'],
+                name='unique_follower_following'
+            )
+        ]
 
     def __str__(self):
         return f'{self.follower} подписан на {self.following}'
@@ -150,10 +157,7 @@ class Favorite(models.Model):
         verbose_name_plural = 'Избранные рецепты'
 
     def __str__(self):
-        return 'str'
-        # list_recipes = [item['name'] for item in self.recipe.values('name')]
-        # list_recipes_str = ', '.join(list_recipes)
-        # return f'{self.user} добавил {list_recipes_str} в избранные.'
+        return f'{self.user.username} добавил {self.recipe.name} в избраннное'
 
 
 class ShoppingСart(models.Model):
@@ -174,8 +178,5 @@ class ShoppingСart(models.Model):
         verbose_name_plural = 'Рецепты в списке покупок'
 
     def __str__(self):
-        print(self.recipe)
-        return f'{self.recipe}'
-        # list_recipes = [item['name'] for item in self.recipe.values('name')]
-        # list_recipes_str = ', '.join(list_recipes)
-        # return f'{self.user} добавил {list_recipes_str} в список покупок.'
+        return (f'{self.user.username} добавил'
+                f'{self.recipe.name} в список покупок')

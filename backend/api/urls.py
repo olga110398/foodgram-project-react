@@ -18,11 +18,10 @@ router.register('users', UserViewSet, basename='users')
 
 
 urlpatterns = [
+    path('users/subscriptions/', SubscribeListView.as_view()),
+    path('users/<int:id>/subscribe/', SubscribeViewSet.as_view()),
+    path('recipes/<int:id>/favorite/', APIFavorite.as_view()),
+    path('recipes/<int:id>/shopping_cart/', APIShoppingCart.as_view()),
+    path('recipes/download_shopping_cart/', APIShoppingCart.as_view()),
     path('', include(router.urls)),
-    path('users/subscriptions', SubscribeListView.as_view()),
-    path('users/<int:id>/subscribe', SubscribeViewSet.as_view(
-        {'post': 'subscribe', 'delete': 'subscribe'})),
-    path('recipes/<int:id>/favorite', APIFavorite.as_view()),
-    path('recipes/<int:id>/shopping_cart', APIShoppingCart.as_view()),
-    path('recipes/download_shopping_cart', APIShoppingCart.as_view()),
 ]

@@ -1,11 +1,10 @@
 from django_filters import FilterSet
 from django_filters.rest_framework import filters
-from rest_framework.filters import SearchFilter
 
 from recipes.models import Ingredient, Recipe, Tag
 
 
-class IngredientSearchFilter(SearchFilter):
+class IngredientSearchFilter(FilterSet):
     name = filters.CharFilter(lookup_expr='startswith')
 
     class Meta:
@@ -16,7 +15,7 @@ class IngredientSearchFilter(SearchFilter):
 class RecipeFilter(FilterSet):
     """Фильтр для рецептов."""
     tags = filters.ModelMultipleChoiceFilter(
-        field_name='tags_slug',
+        field_name='tags__slug',
         to_field_name='slug',
         queryset=Tag.objects.all()
     )
@@ -24,7 +23,7 @@ class RecipeFilter(FilterSet):
         method='filter_is_favorited'
     )
     is_in_shopping_cart = filters.BooleanFilter(
-        method='filter_shoppingcart'
+        method='filter_is_in_shopping_cart'
     )
 
     class Meta:
@@ -32,7 +31,7 @@ class RecipeFilter(FilterSet):
         fields = ('is_favorited', 'is_in_shopping_cart',
                   'author', 'tags')
 
-    def filte_is_favorited(self, queryset, name, value):
+    def filter_is_favorited(self, queryset, name, value):
         user = self.request.user
         if value and user.is_authenticated:
             return queryset.filter(favorites__user=user)
