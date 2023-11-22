@@ -54,9 +54,10 @@ class RecipeListSerializer(serializers.ModelSerializer):
     def get_is_favorited(self, obj):
         request = self.context.get('request')
         return (
-            request and
-            request.user.is_authenticated and
-            Favorite.objects.filter(user=request.user, recipe=obj).exists()
+            request
+            and request.user.is_authenticated
+            and Favorite.objects.filter(user=request.user,
+                                        recipe=obj).exists()
         )
 
     def get_is_in_shopping_cart(self, obj):
@@ -173,9 +174,9 @@ class SubscribeListSerializer(ProfileSerializer):
             except TypeError:
                 print('recipe_limit может быть только числом')
         return RecipeMiniFieldSerializer(
-                recipes,
-                many=True,
-                context=self.context).data
+            recipes,
+            many=True,
+            context=self.context).data
 
     def get_recipes_count(self, obj):
         recipes = Recipe.objects.filter(author=obj)
