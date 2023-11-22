@@ -32,8 +32,7 @@ class Tag(models.Model):
         verbose_name='Цветовой код')
     slug = models.SlugField(
         max_length=MAX_LENGHT,
-        unique=True,
-        )
+        unique=True,)
 
     class Meta:
         ordering = ('name',)
@@ -80,7 +79,7 @@ class Recipe(models.Model):
             MaxValueValidator(
                 MAX_VALUE,
                 'Время приготовления не может быть больше 32000 минут')
-            ]
+        ]
     )
 
     class Meta:
@@ -116,7 +115,7 @@ class IngredientAmount(models.Model):
             MaxValueValidator(
                 MAX_VALUE,
                 'Количество ингредиента не может быть больше 32000')
-            ]
+        ]
     )
 
     def __str__(self):
