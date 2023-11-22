@@ -12,7 +12,6 @@ from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 from recipes.models import (Favorite, Ingredient, IngredientAmount, Recipe,
                             ShoppingСart, Subscribe, Tag)
 from users.models import CustomUser
-
 from .filters import IngredientSearchFilter, RecipeFilter
 from .permissions import IsAuthorOrReadOnlyPermission
 from .serializers import (FavoriteSerializer, IngredientSerializer,
@@ -60,9 +59,7 @@ class SubscribeListView(ListAPIView):
     pagination_class = CustomPaginator
 
     def get_queryset(self):
-        subscribe = Subscribe.objects.filter(
-            follower=self.request.user).values_list('following_id')
-        return CustomUser.objects.filter(id__in=subscribe)
+        return CustomUser.objects.filter(following__follower=self.request.user)
 
 
 class SubscribeViewSet(APIView):
@@ -70,8 +67,7 @@ class SubscribeViewSet(APIView):
     permission_classes = (IsAuthenticated,)
 
     def post(self, request, **kwargs):
-        following_id = self.kwargs.get('id')
-        following = get_object_or_404(CustomUser, id=following_id)
+        following = get_object_or_404(CustomUser, id=kwargs['id'])
         serializer = SubcribeSerializer(
             data={'follower': request.user.id, 'following': following.id},
             context={'request': request}
@@ -81,19 +77,15 @@ class SubscribeViewSet(APIView):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def delete(self, request, **kwargs):
-        follower = request.user
-        following_id = self.kwargs.get('id')
-        following = get_object_or_404(CustomUser, id=following_id)
-        if not Subscribe.objects.filter(follower=follower,
-                                        following=following).exists():
+        following = get_object_or_404(CustomUser, id=kwargs['id'])
+        count_delete, _ = Subscribe.objects.filter(follower=request.user,
+                                                   following=following
+                                                   ).delete()
+        if count_delete == 0:
             return Response(
                 {'errors': 'Вы не подписаны на этого пользователя'},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        user_follow = get_object_or_404(Subscribe,
-                                        follower=follower,
-                                        following=following)
-        user_follow.delete()
         return Response({'status': 'Успешная отписка'},
                         status=status.HTTP_204_NO_CONTENT)
 
@@ -107,26 +99,24 @@ class APIFavorite(APIView):
             recipe = Recipe.objects.get(id=kwargs['id'])
         except Recipe.DoesNotExist:
             recipe = None
-        serializer = FavoriteSerializer(recipe, context={'request': request})
         if not recipe:
             return Response({'error': 'Рецепта не существует'},
                             status=status.HTTP_400_BAD_REQUEST)
-        if Favorite.objects.filter(user=request.user,
-                                   recipe=recipe).exists():
-            return Response({'error': 'Рецепт уже добавлен в избранное'},
-                            status=status.HTTP_400_BAD_REQUEST)
-        Favorite.objects.create(user=request.user, recipe=recipe)
+        serializer = FavoriteSerializer(
+            data={'user': request.user.id, 'recipe': recipe.id},
+            context={'request': request}
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def delete(self, request, **kwargs):
         recipe = get_object_or_404(Recipe, id=kwargs['id'])
-        if not Favorite.objects.filter(user=request.user,
-                                       recipe=recipe).exists():
+        count_delete, _ = Favorite.objects.filter(user=request.user,
+                                                  recipe=recipe).delete()
+        if count_delete == 0:
             return Response({'error': 'Рецепта нет в избранном'},
                             status=status.HTTP_400_BAD_REQUEST)
-
-        get_object_or_404(Favorite, user=request.user,
-                          recipe=recipe).delete()
         return Response({'detail': 'Рецепт удален из избранного'},
                         status=status.HTTP_204_NO_CONTENT)
 
@@ -140,28 +130,26 @@ class APIShoppingCart(APIView):
             recipe = Recipe.objects.get(id=kwargs['id'])
         except Recipe.DoesNotExist:
             recipe = None
-        serializer = ShoppingCartSerializer(recipe,
-                                            context={'request': request})
         if not recipe:
             return Response({'error': 'Рецепта не существует'},
                             status=status.HTTP_400_BAD_REQUEST)
-        if ShoppingСart.objects.filter(user=request.user,
-                                       recipe=recipe).exists():
-            return Response({'error': 'Рецепт уже добавлен в корзину'},
-                            status=status.HTTP_400_BAD_REQUEST)
-        ShoppingСart.objects.create(user=request.user, recipe=recipe)
+        serializer = ShoppingCartSerializer(
+            data={'user': request.user.id, 'recipe': recipe.id},
+            context={'request': request}
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def delete(self, request, **kwargs):
         recipe = get_object_or_404(Recipe, id=kwargs['id'])
-        if not ShoppingСart.objects.filter(user=request.user,
-                                           recipe=recipe).exists():
-            return Response({'error': 'Рецепта нет в корзине'},
+        count_delete, _ = ShoppingСart.objects.filter(
+            user=request.user,
+            recipe=recipe).delete()
+        if count_delete == 0:
+            return Response({'error': 'Рецепта нет в избранном'},
                             status=status.HTTP_400_BAD_REQUEST)
-
-        get_object_or_404(ShoppingСart, user=request.user,
-                          recipe=recipe).delete()
-        return Response({'detail': 'Рецепт удален из корзины'},
+        return Response({'detail': 'Рецепт удален из избранного'},
                         status=status.HTTP_204_NO_CONTENT)
 
     def get(self, request):
