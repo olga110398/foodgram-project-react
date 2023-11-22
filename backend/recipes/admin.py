@@ -9,11 +9,12 @@ class IngredientAdmin(admin.ModelAdmin):
 
 
 class TagAdmin(admin.ModelAdmin):
-    list_display = ('name', 'slug')
+    list_display = ('name', 'color', 'slug')
 
 
 class IngredientAmountInline(admin.TabularInline):
     model = IngredientAmount
+    min_num = 1
 
 
 class RecipeAdmin(admin.ModelAdmin):
