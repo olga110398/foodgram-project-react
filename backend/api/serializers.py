@@ -66,7 +66,7 @@ class RecipeListSerializer(serializers.ModelSerializer):
             request
             and request.user.is_authenticated
             and ShoppingСart.objects.filter(user=request.user,
-                                        recipe=obj).exists()
+                                            recipe=obj).exists()
         )
 
 
