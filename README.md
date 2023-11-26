@@ -6,6 +6,8 @@
 
 *Полная документация к API находится по эндпоинту /redoc/*
 
+*Проект доступен по адресу https://olgaaverkieva.ddns.net/*
+
 **Как запустить проект на серевере:**
 
 Установить на сервере docker и docker-compose. Скопировать на сервер файлы docker-compose.yaml и default.conf:
@@ -42,57 +44,6 @@ sudo docker-compose exec backend python manage.py createsuperuser
 ```
 ```
 sudo docker-compose exec backend python manage.py load_data --path <путь_к_файлу> --model_name <имя_модели> --app_name <название_приложения>
-```
-
-**Как запустить проект локально:**
-
-Клонировать репозиторий и перейти в него в командной строке:
-
-```
-git@github.com:olga110398/foodgram-project-react.git
-```
-Перейти в него:
-
-```
-cd foodgram-project-react
-```
-
-Cоздать и активировать виртуальное окружение:
-
-```
-python -m venv env
-```
-
-```
-source venv/Scripts/activate
-```
-
-Установить зависимости из файла requirements.txt:
-
-```
-python -m pip install --upgrade pip
-```
-
-```
-pip install -r requirements.txt
-```
-
-Выполнить миграции:
-
-```
-python manage.py migrate
-```
-
-Запустить проект:
-
-```
-python manage.py runserver
-```
-
-Наполнить БД данными из .csv файлов:
-
-```
-python manage.py load_data
 ```
 
 ### В API доступны следующие эндпоинты:
