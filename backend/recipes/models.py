@@ -51,7 +51,7 @@ class Recipe(models.Model):
         verbose_name='Автор рецепта'
     )
     name = models.CharField(
-        max_length=200,
+        max_length=MAX_LENGHT,
         verbose_name='Название рецепта')
     image = models.ImageField(
         upload_to='recipes/images/',
@@ -75,15 +75,15 @@ class Recipe(models.Model):
         validators=[
             MinValueValidator(
                 MIN_VALUE,
-                'Время приготовления не может быть меньше 1 минуты'),
+                f'Время приготовления не может быть меньше {MIN_VALUE} минуты'),
             MaxValueValidator(
                 MAX_VALUE,
-                'Время приготовления не может быть больше 32000 минут')
+                f'Время приготовления не может быть больше {MAX_VALUE} минут')
         ]
     )
 
     class Meta:
-        ordering = ('-id',)
+        ordering = ('name',)
         verbose_name = 'Рецепт'
         verbose_name_plural = 'Рецепты'
 
@@ -111,10 +111,10 @@ class IngredientAmount(models.Model):
         validators=[
             MinValueValidator(
                 MIN_VALUE,
-                'Количество ингредиента не может быть меньше 1'),
+                f'Количество ингредиента не может быть меньше {MIN_VALUE}'),
             MaxValueValidator(
                 MAX_VALUE,
-                'Количество ингредиента не может быть больше 32000')
+                f'Количество ингредиента не может быть больше {MAX_VALUE}')
         ]
     )
 
@@ -176,7 +176,7 @@ class Favorite(BaseModel):
         verbose_name_plural = 'Избранные рецепты'
 
     def __str__(self):
-        return f'{self.user} добавил {self.recipe.name} в избраннное'
+        return f'{self.user} добавил {self.recipe} в избраннное'
 
 
 class ShoppingСart(BaseModel):
@@ -186,4 +186,4 @@ class ShoppingСart(BaseModel):
         verbose_name_plural = 'Списки покупок'
 
     def __str__(self):
-        return (f'{self.user} добавил {self.recipe.name} в список покупок')
+        return f'{self.user} добавил {self.recipe} в список покупок'

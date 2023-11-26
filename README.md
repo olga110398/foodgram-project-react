@@ -6,6 +6,50 @@
 
 *Полная документация к API находится по эндпоинту /redoc/*
 
+**Как запустить проект на серевере:**
+
+Установить на сервере docker и docker-compose. Скопировать на сервер файлы docker-compose.yaml и default.conf:
+```
+scp docker-compose.yml <логин_на_сервере>@<IP_сервера>:/home/<логин_на_сервере>/docker-compose.yml
+scp nginx.conf <логин_на_сервере>@<IP_сервера>:/home/<логин_на_сервере>/nginx.conf
+```
+Добавить в Action secrets на Github следующие данные:
+```
+SECRET_KEY              # секретный ключ Django проекта
+DOCKER_PASSWORD         # пароль от Docker Hub
+DOCKER_USERNAME         # логин Docker Hub
+HOST                    # публичный IP сервера
+USER                    # имя пользователя на сервере
+PASSPHRASE              # *если ssh-ключ защищен паролем
+SSH_KEY                 # приватный ssh-ключ
+TELEGRAM_TO             # ID телеграм-аккаунта для посылки сообщения
+TELEGRAM_TOKEN          # токен бота, посылающего сообщение
+
+DB_ENGINE               # django.db.backends.postgresql
+POSTGRES_DB             # postgres
+POSTGRES_USER           # postgres
+POSTGRES_PASSWORD       # postgres
+DB_HOST                 # db
+DB_PORT                 # 5432 (порт по умолчанию)
+```
+Выполнить команды:
+- git add .
+- git commit -m "Коммит"
+- git push
+
+После этого будут запущены процессы workflow:
+- проверка кода на соответствие стандарту PEP8 (с помощью пакета flake8)
+- сборка и доставка докер-образа для контейнера backend на Docker Hub
+- автоматический деплой проекта на сервер
+- отправка уведомления в Telegram о том, что процесс деплоя успешно завершился
+
+После успешного завершения процессов workflow необходимо будет создать суперюзера и загрузить в базу данных информацию об ингредиентах:
+```
+sudo docker-compose exec backend python manage.py createsuperuser
+```
+```
+sudo docker-compose exec backend python manage.py load_data --path <путь_к_файлу> --model_name <имя_модели> --app_name <название_приложения>
+```
 
 **Как запустить проект локально:**
 
@@ -13,7 +57,6 @@
 
 ```
 git@github.com:olga110398/foodgram-project-react.git
-
 ```
 Перейти в него:
 
@@ -82,7 +125,7 @@ python manage.py load_data
 - `/api/ingredients/{id}/` GET-запрос — получение информации об ингредиенте по его id. Доступно без токена.
 
 
-**Авторы проекта:**
+**Автор проекта:**
 
 + Ольга Аверкиева
 

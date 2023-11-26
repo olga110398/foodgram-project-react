@@ -81,7 +81,7 @@ class SubscribeViewSet(APIView):
         count_delete, _ = Subscribe.objects.filter(follower=request.user,
                                                    following=following
                                                    ).delete()
-        if count_delete == 0:
+        if not count_delete:
             return Response(
                 {'errors': 'Вы не подписаны на этого пользователя'},
                 status=status.HTTP_400_BAD_REQUEST
@@ -95,15 +95,8 @@ class APIFavorite(APIView):
     permission_classes = (IsAuthenticated,)
 
     def post(self, request, **kwargs):
-        try:
-            recipe = Recipe.objects.get(id=kwargs['id'])
-        except Recipe.DoesNotExist:
-            recipe = None
-        if not recipe:
-            return Response({'error': 'Рецепта не существует'},
-                            status=status.HTTP_400_BAD_REQUEST)
         serializer = FavoriteSerializer(
-            data={'user': request.user.id, 'recipe': recipe.id},
+            data={'user': request.user.id, 'recipe': kwargs['id']},
             context={'request': request}
         )
         serializer.is_valid(raise_exception=True)
@@ -114,7 +107,7 @@ class APIFavorite(APIView):
         recipe = get_object_or_404(Recipe, id=kwargs['id'])
         count_delete, _ = Favorite.objects.filter(user=request.user,
                                                   recipe=recipe).delete()
-        if count_delete == 0:
+        if not count_delete:
             return Response({'error': 'Рецепта нет в избранном'},
                             status=status.HTTP_400_BAD_REQUEST)
         return Response({'detail': 'Рецепт удален из избранного'},
@@ -126,15 +119,8 @@ class APIShoppingCart(APIView):
     permission_classes = (IsAuthenticated,)
 
     def post(self, request, **kwargs):
-        try:
-            recipe = Recipe.objects.get(id=kwargs['id'])
-        except Recipe.DoesNotExist:
-            recipe = None
-        if not recipe:
-            return Response({'error': 'Рецепта не существует'},
-                            status=status.HTTP_400_BAD_REQUEST)
         serializer = ShoppingCartSerializer(
-            data={'user': request.user.id, 'recipe': recipe.id},
+            data={'user': request.user.id, 'recipe': kwargs['id']},
             context={'request': request}
         )
         serializer.is_valid(raise_exception=True)
@@ -146,7 +132,7 @@ class APIShoppingCart(APIView):
         count_delete, _ = ShoppingСart.objects.filter(
             user=request.user,
             recipe=recipe).delete()
-        if count_delete == 0:
+        if not count_delete:
             return Response({'error': 'Рецепта нет в избранном'},
                             status=status.HTTP_400_BAD_REQUEST)
         return Response({'detail': 'Рецепт удален из избранного'},

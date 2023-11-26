@@ -140,11 +140,9 @@ class RecipeSerializer(serializers.ModelSerializer):
         return recipe
 
     def update(self, instance, validated_data):
-        if 'ingredients' in validated_data:
-            ingredients = validated_data.pop('ingredients')
-            instance.ingredients.clear()
-        if 'tags' in validated_data:
-            tags = validated_data.pop('tags')
+        ingredients = validated_data.pop('ingredients')
+        instance.ingredients.clear()
+        tags = validated_data.pop('tags')
         self.tags_and_ingredients_set(instance, tags, ingredients)
         return super().update(instance, validated_data)
 
@@ -171,8 +169,8 @@ class SubscribeListSerializer(ProfileSerializer):
         if limit:
             try:
                 recipes = recipes[:int(limit)]
-            except TypeError:
-                print('recipe_limit может быть только числом')
+            except ValueError:
+                pass
         return RecipeMiniFieldSerializer(
             recipes,
             many=True,

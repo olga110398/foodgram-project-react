@@ -3,6 +3,8 @@ from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.core.validators import RegexValidator
 from django.db import models
 
+from .constants import MAX_LENGHT
+
 
 class CustomUser(AbstractUser):
     """Модель для user."""
@@ -11,7 +13,7 @@ class CustomUser(AbstractUser):
 
     username = models.CharField(
         'Username',
-        max_length=150,
+        max_length=MAX_LENGHT,
         unique=True,
         validators=[
             UnicodeUsernameValidator(),
@@ -23,20 +25,17 @@ class CustomUser(AbstractUser):
     )
     first_name = models.CharField(
         'Имя',
-        max_length=150,
+        max_length=MAX_LENGHT,
         unique=True,
     )
     last_name = models.CharField(
         'Фамилия',
-        max_length=150,
+        max_length=MAX_LENGHT,
         unique=True,
-        blank=False,
     )
     password = models.CharField(
         'Пароль',
-        max_length=150,
-        blank=False,
-        null=False,
+        max_length=MAX_LENGHT,
         validators=[
             RegexValidator(r'^[\w.@+-]+\Z'),
         ],
