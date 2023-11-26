@@ -24,13 +24,6 @@ PASSPHRASE              # *если ssh-ключ защищен паролем
 SSH_KEY                 # приватный ssh-ключ
 TELEGRAM_TO             # ID телеграм-аккаунта для посылки сообщения
 TELEGRAM_TOKEN          # токен бота, посылающего сообщение
-
-DB_ENGINE               # django.db.backends.postgresql
-POSTGRES_DB             # postgres
-POSTGRES_USER           # postgres
-POSTGRES_PASSWORD       # postgres
-DB_HOST                 # db
-DB_PORT                 # 5432 (порт по умолчанию)
 ```
 Выполнить команды:
 - git add .
